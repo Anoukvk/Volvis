@@ -29,7 +29,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
     TransferFunction tFunc;
     TransferFunctionEditor tfEditor;
     TransferFunction2DEditor tfEditor2D;
-    
+       
     public RaycastRenderer() {
         panel = new RaycastRendererPanel(this);
         panel.setSpeedLabel("0");
@@ -55,7 +55,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         tFunc = new TransferFunction(volume.getMinimum(), volume.getMaximum());
         
         // uncomment this to initialize the TF with good starting values for the orange dataset 
-        tFunc.setTestFunc();
+        //tFunc.setTestFunc();
         
         
         tFunc.addTFChangeListener(this);
@@ -80,20 +80,54 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
     }
      
 
-    short getVoxel(double[] coord) {
+    double getVoxel(double[] coord) {
 
         if (coord[0] < 0 || coord[0] > volume.getDimX() || coord[1] < 0 || coord[1] > volume.getDimY()
                 || coord[2] < 0 || coord[2] > volume.getDimZ()) {
             return 0;
         }
 
-        int x = (int) Math.floor(coord[0]);
-        int y = (int) Math.floor(coord[1]);
-        int z = (int) Math.floor(coord[2]);
-
-        return volume.getVoxel(x, y, z);
+        double x = coord[0];
+        double y = coord[1];
+        double z = coord[2];
+        
+        // x y z waarden hoekpunten
+        int x0 = (int) Math.floor(x);
+        int x1 = (int) Math.ceil(x);
+        int y0 = (int) Math.floor(y);
+        int y1 = (int) Math.ceil(y);
+        int z0 = (int) Math.floor(z);
+        int z1 = (int) Math.ceil(z);
+        
+        // letters uit voorbeeld, bereken waarde van die punten
+        double c000 = volume.getVoxel(x0, y0, z0);
+        double c001 = volume.getVoxel(x0, y0, z1);
+        double c010 = volume.getVoxel(x0, y1, z0);
+        double c100 = volume.getVoxel(x1, y0, z0);
+        double c101 = volume.getVoxel(x1, y0, z1);
+        double c011 = volume.getVoxel(x0, y1, z1);
+        double c110 = volume.getVoxel(x1, y1, z0);
+        double c111 = volume.getVoxel(x1, y1, z1);
+        
+        // interpoleren van de x dimensie
+        double c00 = linearInterpolate(x, x0, x1, c000, c100);
+        double c01 = linearInterpolate(x, x0, x1, c001, c101);
+        double c10 = linearInterpolate(x, x0, x1, c010, c110);
+        double c11 = linearInterpolate(x, x0, x1, c011, c111);
+        
+        // interpoleren van de y dimensie
+        double c0 = linearInterpolate(y, y0, y1, c00, c10);
+        double c1 = linearInterpolate(y, y0, y1, c01, c11);
+        
+        // interpolaren van de z dimensie
+        double c = linearInterpolate(z, z0, z1, c0, c1);
+        return c;
     }
-
+        double linearInterpolate(double x, double x0, double x1, double v0, double v1){
+           double alpha = (x-x0)/(x1-x0);
+           return (1 - alpha)*v0 + alpha*v1;
+       }
+       
 
     void slicer(double[] viewMatrix) {
 
@@ -134,7 +168,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter)
                         + volumeCenter[2];
 
-                int val = getVoxel(pixelCoord);
+                double val = getVoxel(pixelCoord);
                 
                 // Map the intensity to a grey value by linear scaling
                 voxelColor.r = val/max;
@@ -230,6 +264,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         gl.glGetDoublev(GL2.GL_MODELVIEW_MATRIX, viewMatrix, 0);
 
         long startTime = System.currentTimeMillis();
+      
         slicer(viewMatrix);    
         
         long endTime = System.currentTimeMillis();
