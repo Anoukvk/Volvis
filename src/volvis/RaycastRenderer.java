@@ -123,10 +123,11 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         double c = linearInterpolate(z, z0, z1, c0, c1);
         return c;
     }
-        double linearInterpolate(double x, double x0, double x1, double v0, double v1){
-           double alpha = (x-x0)/(x1-x0);
-           return (1 - alpha)*v0 + alpha*v1;
-       }
+    
+    double linearInterpolate(double x, double x0, double x1, double v0, double v1){
+       double alpha = (x-x0)/(x1-x0);
+       return (1 - alpha)*v0 + alpha*v1;
+   }
        
 
     void slicer(double[] viewMatrix) {
@@ -192,6 +193,60 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
     }
 
 
+    void compositing(double[] viewMatrix){
+
+        // clear image
+        for (int j = 0; j < image.getHeight(); j++) {
+            for (int i = 0; i < image.getWidth(); i++) {
+                image.setRGB(i, j, 0);
+            }
+        }
+
+        // vector uVec and vVec define a plane through the origin, 
+        // perpendicular to the view vector viewVec
+        double[] viewVec = new double[3];
+        double[] uVec = new double[3];
+        double[] vVec = new double[3];
+        VectorMath.setVector(viewVec, viewMatrix[2], viewMatrix[6], viewMatrix[10]);
+        VectorMath.setVector(uVec, viewMatrix[0], viewMatrix[4], viewMatrix[8]);
+        VectorMath.setVector(vVec, viewMatrix[1], viewMatrix[5], viewMatrix[9]);
+
+        // image is square
+        int imageCenter = image.getWidth() / 2;
+
+        double[] pixelCoord = new double[3];
+        double[] volumeCenter = new double[3];
+        VectorMath.setVector(volumeCenter, volume.getDimX() / 2, volume.getDimY() / 2, volume.getDimZ() / 2);
+
+        // sample on a plane through the origin of the volume data
+        double max = volume.getMaximum();
+        TFColor voxelColor = new TFColor();
+
+        // For each pixel of the image
+        for (int j = 0; j < image.getHeight(); j++) {
+            for (int i = 0; i < image.getWidth(); i++) {
+                // First, set a color variable in which we can put all the colors together
+                TFColor voxelColorSum = new TFColor(0, 0, 0, 0);
+                // Run through all the pixels on the vector
+                // Get the maximum possible length
+                int diag = (int) Math.sqrt(volume.getDimX() * volume.getDimX() + volume.getDimY() * volume.getDimY() + volume.getDimZ() * volume.getDimZ());
+                // Don't forget, do the maximum length minus 1
+                for(int k = 0; k < diag - 1; k++) {
+                    // Calculate the coordinates of the pixel in the data
+                    pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter) + viewVec[0] * (k - imageCenter) + volumeCenter[0];
+                    pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter) + viewVec[1] * (k - imageCenter) + volumeCenter[1];
+                    pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter) + viewVec[2] * (k - imageCenter) + volumeCenter[2];
+                    // With these pixel coordinates
+                    // Get the voxel info!
+                    double val = getVoxel(pixelCoord);
+                    // 
+                }
+            }
+        }
+        
+    }
+    
+    
     private void drawBoundingBox(GL2 gl) {
         gl.glPushAttrib(GL2.GL_CURRENT_BIT);
         gl.glDisable(GL2.GL_LIGHTING);
