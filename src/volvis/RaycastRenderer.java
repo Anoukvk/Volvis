@@ -255,7 +255,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 voxelColor.b = voxelColor.r;
                 voxelColor.a = maxIntensity > 0 ? 1.0 : 0.0;  // this makes intensity 0 completely transparent and the rest opaque
                 // Alternatively, apply the transfer function to obtain a color
-                // voxelColor = tFunc.getColor(val);
+                //voxelColor = tFunc.getColor(val);
                 
                 
                 // BufferedImage expects a pixel color packed as ARGB in an int
