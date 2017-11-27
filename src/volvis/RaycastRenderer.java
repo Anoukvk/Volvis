@@ -207,7 +207,9 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 image.setRGB(i, j, 0);
             }
         }
-
+         viewVec = new double[3];
+         uVec = new double[3];
+         vVec = new double[3];     
         // vector uVec and vVec define a plane through the origin, 
         // perpendicular to the view vector viewVec
         VectorMath.setVector(viewVec, viewMatrix[2], viewMatrix[6], viewMatrix[10]);
@@ -283,7 +285,9 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
 
         // vector uVec and vVec define a plane through the origin, 
         // perpendicular to the view vector viewVec
-       
+         viewVec = new double[3];
+         uVec = new double[3];
+         vVec = new double[3];  
         VectorMath.setVector(viewVec, viewMatrix[2], viewMatrix[6], viewMatrix[10]);
         VectorMath.setVector(uVec, viewMatrix[0], viewMatrix[4], viewMatrix[8]);
         VectorMath.setVector(vVec, viewMatrix[1], viewMatrix[5], viewMatrix[9]);
