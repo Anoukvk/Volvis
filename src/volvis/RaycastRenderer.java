@@ -321,13 +321,13 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                     // Get it as an integer :) 
                     int val = (int) getVoxel(pixelCoord);
                     // Now get the colors of the Transfer Function
-//                    TFColor color = tFunc.getColor(val);
+                    TFColor color = tFunc.getColor(val);
 //                    // Now we have to calculate the color of the voxel using the color of the previous voxels   
 //                    // We use the back-to-front compositing order
-//                    voxelColor.r = (1 - voxelColor.a) * color.a * color.r + voxelColor.r * voxelColor.a;
-//                    voxelColor.g = (1 - voxelColor.a) * color.a * color.g + voxelColor.g * voxelColor.a ;
-//                    voxelColor.b = (1 - voxelColor.a) * color.a * color.b + voxelColor.b * voxelColor.a;
-//                    voxelColor.a = (1 - voxelColor.a) * color.a + voxelColor.a;
+                    voxelColor.r = (1 - voxelColor.a) * color.a * color.r + voxelColor.r * voxelColor.a;
+                    voxelColor.g = (1 - voxelColor.a) * color.a * color.g + voxelColor.g * voxelColor.a ;
+                    voxelColor.b = (1 - voxelColor.a) * color.a * color.b + voxelColor.b * voxelColor.a;
+                    voxelColor.a = (1 - voxelColor.a) * color.a + voxelColor.a;
 //                    
 //                    if (voxelColor.a > 0.95) {
 //                        break;
