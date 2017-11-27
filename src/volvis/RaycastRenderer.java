@@ -149,6 +149,11 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 image.setRGB(i, j, 0);
             }
         }
+        
+        int resolution = 1;
+        if (interactiveMode) {
+            resolution = 3  ;
+        }
 
         // vector uVec and vVec define a plane through the origin, 
         // perpendicular to the view vector viewVec
@@ -169,8 +174,8 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         max = volume.getMaximum();
 
         
-        for (int j = 0; j < image.getHeight(); j++) {
-            for (int i = 0; i < image.getWidth(); i++) {
+        for (int j = 0; j < image.getHeight(); j+= resolution) {
+            for (int i = 0; i < image.getWidth(); i+=resolution) {
                 pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter)
                         + volumeCenter[0];
                 pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter)
@@ -195,7 +200,16 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 int c_green = voxelColor.g <= 1.0 ? (int) Math.floor(voxelColor.g * 255) : 255;
                 int c_blue = voxelColor.b <= 1.0 ? (int) Math.floor(voxelColor.b * 255) : 255;
                 int pixelColor = (c_alpha << 24) | (c_red << 16) | (c_green << 8) | c_blue;
-                image.setRGB(i, j, pixelColor);
+                for (int m = 0; m <resolution; m++) {
+                 for (int n= 0; n <resolution; n++) {
+                    if (n + i >= image.getHeight() || n + i
+                        < 0
+                        || m + j >= image.getWidth() || m + j < 0) {
+                } else {
+                    image.setRGB(n + i, m + j,pixelColor);
+                    }
+                    }
+                }
             }
         }
 
@@ -272,10 +286,15 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 int pixelColor = (c_alpha << 24) | (c_red << 16) | (c_green << 8) | c_blue;
                 image.setRGB(i, j, pixelColor);
                 
-                if (resolution > 1) {
-                    image.setRGB(i, j + 1, pixelColor);
-                    image.setRGB(i + 1, j, pixelColor);
-                    image.setRGB(i + 1, j + 1, pixelColor);
+                for (int m = 0; m <resolution; m++) {
+                 for (int n= 0; n <resolution; n++) {
+                    if (n + i >= image.getHeight() || n + i
+                        < 0
+                        || m + j >= image.getWidth() || m + j < 0) {
+                } else {
+                    image.setRGB(n + i, m + j,pixelColor);
+                    }
+                    }
                 }
             }
         }
@@ -360,11 +379,16 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 int c_blue = voxelColor.b <= 1.0 ? (int) Math.floor(voxelColor.b * 255) : 255;
                 int pixelColor = (c_alpha << 24) | (c_red << 16) | (c_green << 8) | c_blue;
                 // Tadaaaa, here's the image!
-                image.setRGB(i, j, pixelColor);
-                if (resolution > 1) {
-                    image.setRGB(i, j + 1, pixelColor);
-                    image.setRGB(i + 1, j, pixelColor);
-                    image.setRGB(i + 1, j + 1, pixelColor);
+               // image.setRGB(i, j, pixelColor);
+                for (int m = 0; m <resolution; m++) {
+                 for (int n= 0; n <resolution; n++) {
+                    if (n + i >= image.getHeight() || n + i
+                        < 0
+                        || m + j >= image.getWidth() || m + j < 0) {
+                } else {
+                    image.setRGB(n + i, m + j,pixelColor);
+                    }
+                    }
                 }
             }
         }
