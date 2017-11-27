@@ -283,9 +283,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
 
         // vector uVec and vVec define a plane through the origin, 
         // perpendicular to the view vector viewVec
-        double[] viewVec = new double[3];
-        double[] uVec = new double[3];
-        double[] vVec = new double[3];
+       
         VectorMath.setVector(viewVec, viewMatrix[2], viewMatrix[6], viewMatrix[10]);
         VectorMath.setVector(uVec, viewMatrix[0], viewMatrix[4], viewMatrix[8]);
         VectorMath.setVector(vVec, viewMatrix[1], viewMatrix[5], viewMatrix[9]);
