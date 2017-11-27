@@ -270,6 +270,87 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
 
     }
 
+    
+    
+    void compositing(double[] viewMatrix){
+
+        // clear image
+        for (int j = 0; j < image.getHeight(); j++) {
+            for (int i = 0; i < image.getWidth(); i++) {
+                image.setRGB(i, j, 0);
+            }
+        }
+
+        // vector uVec and vVec define a plane through the origin, 
+        // perpendicular to the view vector viewVec
+        double[] viewVec = new double[3];
+        double[] uVec = new double[3];
+        double[] vVec = new double[3];
+        VectorMath.setVector(viewVec, viewMatrix[2], viewMatrix[6], viewMatrix[10]);
+        VectorMath.setVector(uVec, viewMatrix[0], viewMatrix[4], viewMatrix[8]);
+        VectorMath.setVector(vVec, viewMatrix[1], viewMatrix[5], viewMatrix[9]);
+
+        // image is square
+        imageCenter = image.getWidth() / 2;
+        pixelCoord = new double[3];
+        volumeCenter = new double[3];
+        VectorMath.setVector(volumeCenter, volume.getDimX() / 2, volume.getDimY() / 2, volume.getDimZ() / 2);
+
+        // sample on a plane through the origin of the volume data
+        double max = volume.getMaximum();
+
+        // Run through all the pixels on the vector
+        // Get the maximum possible length
+        int diag = (int) Math.sqrt(volume.getDimX() * volume.getDimX() + volume.getDimY() * volume.getDimY() + volume.getDimZ() * volume.getDimZ());
+
+        // For each pixel of the image
+        for (int j = 0; j < image.getHeight(); j++) {
+            for (int i = 0; i < image.getWidth(); i++) {
+                // First, set a color variable in which we can put all the colors together
+                TFColor voxelColor = new TFColor();
+                voxelColor.r = 0.0;
+                voxelColor.g = 0.0 ;
+                    voxelColor.b = 0.0;
+                    voxelColor.a = 0.0;
+                // Don't forget, do the maximum length minus 1
+                for(int k = 0; k < diag - 1; k++) {
+                    // Calculate the coordinates of the pixel in the data
+                    pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter) + viewVec[0] * (k - imageCenter) + volumeCenter[0];
+                    pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter) + viewVec[1] * (k - imageCenter) + volumeCenter[1];
+                    pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter) + viewVec[2] * (k - imageCenter) + volumeCenter[2];
+                    // With these pixel coordinates
+                    // Get the voxel info!
+                    // Get it as an integer :) 
+                    int val = (int) getVoxel(pixelCoord);
+                    // Now get the colors of the Transfer Function
+//                    TFColor color = tFunc.getColor(val);
+//                    // Now we have to calculate the color of the voxel using the color of the previous voxels   
+//                    // We use the back-to-front compositing order
+//                    voxelColor.r = (1 - voxelColor.a) * color.a * color.r + voxelColor.r * voxelColor.a;
+//                    voxelColor.g = (1 - voxelColor.a) * color.a * color.g + voxelColor.g * voxelColor.a ;
+//                    voxelColor.b = (1 - voxelColor.a) * color.a * color.b + voxelColor.b * voxelColor.a;
+//                    voxelColor.a = (1 - voxelColor.a) * color.a + voxelColor.a;
+//                    
+//                    if (voxelColor.a > 0.95) {
+//                        break;
+//                    }
+                }
+                // Turn the voxelColor into nice RGB stuff
+                int c_alpha = voxelColor.a <= 1.0 ? (int) Math.floor(voxelColor.a * 255) : 255;
+                int c_red = voxelColor.r <= 1.0 ? (int) Math.floor(voxelColor.r * 255) : 255;
+                int c_green = voxelColor.g <= 1.0 ? (int) Math.floor(voxelColor.g * 255) : 255;
+                int c_blue = voxelColor.b <= 1.0 ? (int) Math.floor(voxelColor.b * 255) : 255;
+                int pixelColor = (c_alpha << 24) | (c_red << 16) | (c_green << 8) | c_blue;
+                // Tadaaaa, here's the image!
+                image.setRGB(i, j, pixelColor);
+            }
+        }
+        
+    }
+    
+    
+
+    
     private void drawBoundingBox(GL2 gl) {
         gl.glPushAttrib(GL2.GL_CURRENT_BIT);
         gl.glDisable(GL2.GL_LIGHTING);
@@ -348,9 +429,9 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
            slicer(viewMatrix);
         } else if("MIP".equals(type)){
             mip(viewMatrix);
-      //  } else if("Compositing".equals(type)){
-          // compositing(viewMatrix);
-      //  }else if ("TransferFunction2D".equals(type)){
+        } else if("Compositing".equals(type)){
+            compositing(viewMatrix);
+        //}else if ("TransferFunction2D".equals(type)){
          //   transferFunction2D(viewMatrix);
         } else{
             slicer(viewMatrix); 
