@@ -328,10 +328,12 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                     TFColor color = tFunc.getColor(val);
 //                    // Now we have to calculate the color of the voxel using the color of the previous voxels   
 //                    // We use the back-to-front compositing order
-                    voxelColor.r = (1 - voxelColor.a) * color.a * color.r + voxelColor.r * voxelColor.a;
-                    voxelColor.g = (1 - voxelColor.a) * color.a * color.g + voxelColor.g * voxelColor.a ;
-                    voxelColor.b = (1 - voxelColor.a) * color.a * color.b + voxelColor.b * voxelColor.a;
-                    voxelColor.a = (1 - voxelColor.a) * color.a + voxelColor.a;
+
+                    //formule slides week 2 
+                    voxelColor.r = (1 - color.a) * voxelColor.r + color.a*color.r;
+                    voxelColor.g = (1 - color.a) * voxelColor.g + color.a*color.g;
+                    voxelColor.b = (1 - color.a) * voxelColor.b + color.a*color.b;
+                    voxelColor.a = (1 - color.a) * voxelColor.a + color.a;
 //                    
 //                    if (voxelColor.a > 0.95) {
 //                        break;
