@@ -207,6 +207,11 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 image.setRGB(i, j, 0);
             }
         }
+        
+         int resolution = 1;
+        if (interactiveMode) {
+            resolution = 3  ;
+        }
          viewVec = new double[3];
          uVec = new double[3];
          vVec = new double[3];     
@@ -227,8 +232,8 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         TFColor voxelColor = new TFColor();
 
         
-        for (int j = 0; j < image.getHeight(); j++) {
-            for (int i = 0; i < image.getWidth(); i++) {
+        for (int j = 0; j < image.getHeight(); j+= resolution) {
+            for (int i = 0; i < image.getWidth(); i+= resolution) {
                 
                 int diag = (int) Math.sqrt(volume.getDimX() * volume.getDimX() + volume.getDimY() * volume.getDimY() + volume.getDimZ() * volume.getDimZ()); 
                 double maxIntensity = 0;
@@ -267,6 +272,12 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 int c_blue = voxelColor.b <= 1.0 ? (int) Math.floor(voxelColor.b * 255) : 255;
                 int pixelColor = (c_alpha << 24) | (c_red << 16) | (c_green << 8) | c_blue;
                 image.setRGB(i, j, pixelColor);
+                
+                if (resolution > 1) {
+                    image.setRGB(i, j + 1, pixelColor);
+                    image.setRGB(i + 1, j, pixelColor);
+                    image.setRGB(i + 1, j + 1, pixelColor);
+                }
             }
         }
 
@@ -281,6 +292,10 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
             for (int i = 0; i < image.getWidth(); i++) {
                 image.setRGB(i, j, 0);
             }
+        }
+        int resolution = 1;
+        if (interactiveMode) {
+            resolution = 3  ;
         }
 
         // vector uVec and vVec define a plane through the origin, 
@@ -306,8 +321,8 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         int diag = (int) Math.sqrt(volume.getDimX() * volume.getDimX() + volume.getDimY() * volume.getDimY() + volume.getDimZ() * volume.getDimZ());
 
         // For each pixel of the image
-        for (int j = 0; j < image.getHeight(); j++) {
-            for (int i = 0; i < image.getWidth(); i++) {
+        for (int j = 0; j < image.getHeight(); j+=resolution) {
+            for (int i = 0; i < image.getWidth(); i+=resolution) {
                 // First, set a color variable in which we can put all the colors together
                 TFColor voxelColor = new TFColor();
                 voxelColor.r = 0.0;
@@ -347,6 +362,11 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 int pixelColor = (c_alpha << 24) | (c_red << 16) | (c_green << 8) | c_blue;
                 // Tadaaaa, here's the image!
                 image.setRGB(i, j, pixelColor);
+                if (resolution > 1) {
+                    image.setRGB(i, j + 1, pixelColor);
+                    image.setRGB(i + 1, j, pixelColor);
+                    image.setRGB(i + 1, j + 1, pixelColor);
+                }
             }
         }
         
