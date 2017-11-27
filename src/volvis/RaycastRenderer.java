@@ -31,12 +31,14 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
     TransferFunctionEditor tfEditor;
     TransferFunction2DEditor tfEditor2D;
     private String type = "Slicer";
-    double[] viewVec = new double[3];
-    double[] uVec = new double[3];
-    double[] vVec = new double[3];
-    double[] pixelCoord = new double[3];
-    double[] volumeCenter = new double[3];
-    int imageCenter;
+    private double[] viewVec = new double[3];
+    private double[] uVec = new double[3];
+    private double[] vVec = new double[3];
+    private double[] pixelCoord = new double[3];
+    private double[] volumeCenter = new double[3];
+    private int imageCenter;
+    private double max = 0;
+    private TFColor voxelColor = new TFColor();
        
     public RaycastRenderer() {
         panel = new RaycastRendererPanel(this);
@@ -164,8 +166,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
 
           
         // sample on a plane through the origin of the volume data
-        double max = volume.getMaximum();
-        TFColor voxelColor = new TFColor();
+        max = volume.getMaximum();
 
         
         for (int j = 0; j < image.getHeight(); j++) {
@@ -228,9 +229,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         VectorMath.setVector(volumeCenter, volume.getDimX() / 2, volume.getDimY() / 2, volume.getDimZ() / 2);
 
         // sample on a plane through the origin of the volume data
-        double max = volume.getMaximum();
-        TFColor voxelColor = new TFColor();
-
+        max = volume.getMaximum();
         
         for (int j = 0; j < image.getHeight(); j+= resolution) {
             for (int i = 0; i < image.getWidth(); i+= resolution) {
@@ -314,7 +313,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         VectorMath.setVector(volumeCenter, volume.getDimX() / 2, volume.getDimY() / 2, volume.getDimZ() / 2);
 
         // sample on a plane through the origin of the volume data
-        double max = volume.getMaximum();
+        max = volume.getMaximum();
 
         // Run through all the pixels on the vector
         // Get the maximum possible length
