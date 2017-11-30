@@ -94,10 +94,6 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
 
     double getVoxel(double[] coord) {
 
-        if (coord[0] < 0 || coord[0] > volume.getDimX() || coord[1] < 0 || coord[1] > volume.getDimY()
-                || coord[2] < 0 || coord[2] > volume.getDimZ()) {
-            return 0;
-        }
         // x y z in data
         double x = coord[0];
         double y = coord[1];
@@ -110,6 +106,11 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         int y1 = (int) Math.min(Math.ceil(y), volume.getDimY() - 1);
         int z0 = (int) Math.floor(z);
         int z1 = (int) Math.min(Math.ceil(z), volume.getDimZ() - 1);
+        
+         if (coord[0] < 0 || coord[0] > volume.getDimX() || coord[1] < 0 || coord[1] > volume.getDimY()
+                || coord[2] < 0 || coord[2] > volume.getDimZ() || x0 >= volume.getDimX() || x0 < 0 || y0 >= volume.getDimY() || y0 < 0 || z0 >= volume.getDimZ() || z0<0 || x1<0 || x1 > volume.getDimX() || y1 < 0 || y1 > volume.getDimY() || z1<0 || z1> volume.getDimZ()) {
+            return 0;
+        }
         
         // letters uit voorbeeld, bereken waarde van die punten
         double c000 = volume.getVoxel(x0, y0, z0);
@@ -390,6 +391,65 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         
     }
     
+     void tf2d (double[] viewMatrix){
+          // clear image
+        for (int j = 0; j < image.getHeight(); j++) {
+            for (int i = 0; i < image.getWidth(); i++) {
+                image.setRGB(i, j, 0);
+            }
+        }
+        int resolution = 1;
+        if (interactiveMode) {
+            resolution = 3  ;
+        }
+        float baseIntensity = tfEditor2D.triangleWidget.baseIntensity;
+        double opacity = tfEditor2D.triangleWidget.color.a;
+        double radius = tfEditor2D.triangleWidget.radius;
+       
+
+        // vector uVec and vVec define a plane through the origin, 
+        // perpendicular to the view vector viewVec
+        viewVec = new double[3];
+        uVec = new double[3];
+        vVec = new double[3];  
+        VectorMath.setVector(viewVec, viewMatrix[2], viewMatrix[6], viewMatrix[10]);
+        VectorMath.setVector(uVec, viewMatrix[0], viewMatrix[4], viewMatrix[8]);
+        VectorMath.setVector(vVec, viewMatrix[1], viewMatrix[5], viewMatrix[9]);
+
+        // image is square
+        imageCenter = image.getWidth() / 2;
+        pixelCoord = new double[3];
+        volumeCenter = new double[3];
+        VectorMath.setVector(volumeCenter, volume.getDimX() / 2, volume.getDimY() / 2, volume.getDimZ() / 2);
+
+        // sample on a plane through the origin of the volume data
+        max = volume.getMaximum();
+
+        // Run through all the pixels on the vector
+        // Get the maximum possible length
+        int diag = (int) Math.sqrt(volume.getDimX() * volume.getDimX() + volume.getDimY() * volume.getDimY() + volume.getDimZ() * volume.getDimZ());
+
+        // For each pixel of the image
+        for (int j = 0; j < image.getHeight(); j+=resolution) {
+            for (int i = 0; i < image.getWidth(); i+=resolution) {
+                // First, set a color variable in which we can put all the colors together
+                voxelColor = new TFColor();
+                voxelColor = tfEditor2D.triangleWidget.color;
+                voxelColor.a = 0;
+                // Don't forget, do the maximum length minus 1
+                for(int k = 0; k < diag - 1; k++) {
+                    // Calculate the coordinates of the pixel in the data
+                    pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter) + viewVec[0] * (k - imageCenter) + volumeCenter[0];
+                    pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter) + viewVec[1] * (k - imageCenter) + volumeCenter[1];
+                    pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter) + viewVec[2] * (k - imageCenter) + volumeCenter[2];
+                  
+                  int val = (int) getVoxel(pixelCoord);
+     }
+            }
+        }
+     }
+
+    
     
 
     
@@ -473,9 +533,9 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
             mip(viewMatrix);
         } else if("Compositing".equals(type)){
             compositing(viewMatrix);
-        //}else if ("TransferFunction2D".equals(type)){
-         //   transferFunction2D(viewMatrix);
-        } else{
+        } else if("2dtf".equals(type)){
+            tf2d(viewMatrix);
+        }else{
             slicer(viewMatrix); 
         }   
         
