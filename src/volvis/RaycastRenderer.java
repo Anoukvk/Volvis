@@ -443,8 +443,14 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                     pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter) + viewVec[1] * (k - imageCenter) + volumeCenter[1];
                     pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter) + viewVec[2] * (k - imageCenter) + volumeCenter[2];
                   
-                  int val = (int) getVoxel(pixelCoord);
-     }
+                    int val = (int) getVoxel(pixelCoord);
+                    // Levoy paper
+                    // F_v = base
+                    // F(x) = valcurrent
+                    // delta F(x) = gradientMag
+                    // r = radius
+                    // alphaV = 1?
+                }
             }
         }
      }
