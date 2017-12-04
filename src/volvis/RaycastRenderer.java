@@ -17,6 +17,7 @@ import util.TFChangeListener;
 import util.VectorMath;
 import volume.GradientVolume;
 import volume.Volume;
+import volume.VoxelGradient;
 
 /**
  *
@@ -31,6 +32,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
     TransferFunctionEditor tfEditor;
     TransferFunction2DEditor tfEditor2D;
     private String type = "Slicer";
+    private boolean shading = false;
     private double[] viewVec = new double[3];
     private double[] uVec = new double[3];
     private double[] vVec = new double[3];
@@ -46,6 +48,14 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
     }
     public void setType(String renderer) {
         type = renderer;
+    }
+    
+    public void toggleShading() {
+        if (shading) {
+            shading = false;
+        } else {
+            shading = true;
+        }
     }
     public void setVolume(Volume vol) {
         System.out.println("Assigning volume");
@@ -402,12 +412,8 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         if (interactiveMode) {
             resolution = 3  ;
         }
-        float baseIntensity = tfEditor2D.triangleWidget.baseIntensity;
-        double opacity = tfEditor2D.triangleWidget.color.a;
-        double radius = tfEditor2D.triangleWidget.radius;
-       
-
-        // vector uVec and vVec define a plane through the origin, 
+        
+                // vector uVec and vVec define a plane through the origin, 
         // perpendicular to the view vector viewVec
         viewVec = new double[3];
         uVec = new double[3];
@@ -424,7 +430,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
 
         // sample on a plane through the origin of the volume data
         max = volume.getMaximum();
-
+    //    TFColor voxelColor = new TFColor();
         // Run through all the pixels on the vector
         // Get the maximum possible length
         int diag = (int) Math.sqrt(volume.getDimX() * volume.getDimX() + volume.getDimY() * volume.getDimY() + volume.getDimZ() * volume.getDimZ());
@@ -433,9 +439,10 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         for (int j = 0; j < image.getHeight(); j+=resolution) {
             for (int i = 0; i < image.getWidth(); i+=resolution) {
                 // First, set a color variable in which we can put all the colors together
-                voxelColor = new TFColor();
-                voxelColor = tfEditor2D.triangleWidget.color;
-                voxelColor.a = 0;
+                voxelColor = new TFColor(0,0,0,1);
+         //       voxelColor = tfEditor2D.triangleWidget.color;
+          //      voxelColor.a = 0;
+                
                 // Don't forget, do the maximum length minus 1
                 for(int k = 0; k < diag - 1; k++) {
                     // Calculate the coordinates of the pixel in the data
@@ -444,19 +451,55 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                     pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter) + viewVec[2] * (k - imageCenter) + volumeCenter[2];
                   
                     int val = (int) getVoxel(pixelCoord);
-                    // Levoy paper
+                     // Levoy paper
                     // F_v = base
                     // F(x) = valcurrent
                     // delta F(x) = gradientMag
                     // r = radius
                     // alphaV = 1?
+                    if (val == 0) {
+                        continue;
+                    }
+                    float baseIntensity = tfEditor2D.triangleWidget.baseIntensity;
+                    TFColor color = tfEditor2D.triangleWidget.color;
+                    double radius = tfEditor2D.triangleWidget.radius;
+                    double alpha;
+                    
+                    VoxelGradient gradient = gradients.getGradient((int) pixelCoord[0], (int) pixelCoord[1], (int) pixelCoord[2]);
+                    
+                    if (val == baseIntensity && gradient.mag == 0){
+                        alpha = 1;
+                    } else if (gradient.mag > 0 && ((val - (radius * gradient.mag)) <= baseIntensity && baseIntensity <= (val + (radius * gradient.mag)))) {
+                            alpha = color.a * (1 - (1 / radius) * Math.abs(((baseIntensity - val) / gradient.mag)));
+                        } else {
+                        alpha = 0;
+                    }
+                     voxelColor.r = (color.r * alpha) + (voxelColor.r * (1 - alpha));
+                    voxelColor.g = (color.g * alpha) + (voxelColor.g * (1 - alpha));
+                    voxelColor.b = (color.b * alpha) + (voxelColor.b * (1 - alpha));
+                     
+                }
+                int c_alpha = voxelColor.a <= 1.0 ? (int) Math.floor(voxelColor.a * 255) : 255;
+                int c_red = voxelColor.r <= 1.0 ? (int) Math.floor(voxelColor.r * 255) : 255;
+                int c_green = voxelColor.g <= 1.0 ? (int) Math.floor(voxelColor.g * 255) : 255;
+                int c_blue = voxelColor.b <= 1.0 ? (int) Math.floor(voxelColor.b * 255) : 255;
+                int pixelColor = (c_alpha << 24) | (c_red << 16) | (c_green << 8) | c_blue;
+                image.setRGB(i, j, pixelColor);
+                
+               for (int m = 0; m <resolution; m++) {
+                    for (int n= 0; n <resolution; n++) {
+                        if (n + i < image.getHeight() 
+                            && n + i >= 0
+                            && m + j < image.getWidth() 
+                            && m + j >= 0) {
+                            image.setRGB(n + i, m + j,pixelColor);
+                        }
+                    }
                 }
             }
         }
      }
-
-    
-    
+  
 
     
     private void drawBoundingBox(GL2 gl) {
