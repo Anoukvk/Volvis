@@ -474,11 +474,20 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                         } else {
                         alpha = 0;
                     }
-                     voxelColor.r = (color.r * alpha) + (voxelColor.r * (1 - alpha));
-                    voxelColor.g = (color.g * alpha) + (voxelColor.g * (1 - alpha));
-                    voxelColor.b = (color.b * alpha) + (voxelColor.b * (1 - alpha));
+                    
+                      double phong;
+                    if (shading) {
+                        phong = phongModel(viewMatrix, pixelCoord);
+                    } else {
+                        phong = 1.0;
+                    }
+                    voxelColor.r = (color.r * alpha * phong) + (voxelColor.r * (1 - alpha));
+                    voxelColor.g = (color.g * alpha * phong) + (voxelColor.g * (1 - alpha));
+                    voxelColor.b = (color.b * alpha * phong) + (voxelColor.b * (1 - alpha));
                      
-                }
+                 
+                    
+                  }
                 int c_alpha = voxelColor.a <= 1.0 ? (int) Math.floor(voxelColor.a * 255) : 255;
                 int c_red = voxelColor.r <= 1.0 ? (int) Math.floor(voxelColor.r * 255) : 255;
                 int c_green = voxelColor.g <= 1.0 ? (int) Math.floor(voxelColor.g * 255) : 255;
@@ -500,7 +509,50 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         }
      }
   
+public double phongModel(double[] viewMatrix, double[] coord) {
+        if (coord[0] < 0 || coord[0] > volume.getDimX() - 1|| coord[1] < 0 || coord[1] > volume.getDimY() - 1
+                || coord[2] < 0 || coord[2] > volume.getDimZ() - 1) {
+            return 0;
+        }
 
+        int x = (int) Math.floor(coord[0]);
+        int y = (int) Math.floor(coord[1]);
+        int z = (int) Math.floor(coord[2]);
+
+        double[] N = new double[3];
+        VoxelGradient gradient = gradients.getGradient(x, y, z);
+        VectorMath.setVector(N, -gradient.x / gradient.mag, -gradient.y / gradient.mag, -gradient.z / gradient.mag);
+
+        double[] V = new double[3];
+        VectorMath.setVector(V, -viewMatrix[2], -viewMatrix[6], -viewMatrix[10]);
+        double VLength = VectorMath.length(V);
+
+        double[] L = new double[3];
+        VectorMath.setVector(L, V[0] / VLength, V[1] / VLength, V[2] / VLength);
+
+        double[] H = new double[3];
+        VectorMath.setVector(H, V[0] / VLength, V[1] / VLength, V[2] / VLength);
+
+        double iAmb = 1;
+        double kAmb = 0.1;
+        double iDiff = 1;
+        double kDiff = 0.7;
+        double kSpec = 0.2;
+        double alpha = 10;
+
+        double shade = 0;
+        double ambTerm = iAmb * kAmb;
+        if (ambTerm > 0)
+            shade += ambTerm;
+        double diffTerm = iDiff * kDiff * (VectorMath.dotproduct(N, L));
+        if (diffTerm > 0)
+            shade += diffTerm;        
+        double specTerm = kSpec * Math.pow(VectorMath.dotproduct(N, H), alpha);
+        if (specTerm > 0)
+            shade += specTerm;
+        
+        return shade;
+    }
     
     private void drawBoundingBox(GL2 gl) {
         gl.glPushAttrib(GL2.GL_CURRENT_BIT);
