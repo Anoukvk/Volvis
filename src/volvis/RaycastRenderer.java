@@ -464,14 +464,19 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                     TFColor color = tfEditor2D.triangleWidget.color;
                     double radius = tfEditor2D.triangleWidget.radius;
                     double alpha;
+                    double minMagnitude = tfEditor2D.triangleWidget.minMagnitude;
+                    double maxMagnitude = tfEditor2D.triangleWidget.maxMagnitude;
                     
                     VoxelGradient gradient = gradients.getGradient((int) pixelCoord[0], (int) pixelCoord[1], (int) pixelCoord[2]);
-                    
+                 if (minMagnitude <= gradient.mag && maxMagnitude >= gradient.mag) {
                     if (val == baseIntensity && gradient.mag == 0){
                         alpha = 1;
                     } else if (gradient.mag > 0 && ((val - (radius * gradient.mag)) <= baseIntensity && baseIntensity <= (val + (radius * gradient.mag)))) {
                             alpha = color.a * (1 - (1 / radius) * Math.abs(((baseIntensity - val) / gradient.mag)));
                         } else {
+                        alpha = 0;
+                    }
+                 } else{
                         alpha = 0;
                     }
                     
