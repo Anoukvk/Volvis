@@ -453,7 +453,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                     int val = (int) getVoxel(pixelCoord);
                      // Levoy paper
                     // F_v = base
-                    // F(x) = valcurrent
+                    // F(x) = val
                     // delta F(x) = gradientMag
                     // r = radius
                     // alphaV = 1?
@@ -470,7 +470,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                     VoxelGradient gradient = gradients.getGradient((int) pixelCoord[0], (int) pixelCoord[1], (int) pixelCoord[2]);
                  if (minMagnitude <= gradient.mag && maxMagnitude >= gradient.mag) {
                     if (val == baseIntensity && gradient.mag == 0){
-                        alpha = 1;
+                        alpha = color.a * 1;
                     } else if (gradient.mag > 0 && ((val - (radius * gradient.mag)) <= baseIntensity && baseIntensity <= (val + (radius * gradient.mag)))) {
                             alpha = color.a * (1 - (1 / radius) * Math.abs(((baseIntensity - val) / gradient.mag)));
                         } else {
@@ -545,18 +545,18 @@ public double phongModel(double[] viewMatrix, double[] coord) {
         double kSpec = 0.2;
         double alpha = 10;
 
-        double shade = 0;
+        double phong = 0;
         double ambTerm = iAmb * kAmb;
         if (ambTerm > 0)
-            shade += ambTerm;
+            phong += ambTerm;
         double diffTerm = iDiff * kDiff * (VectorMath.dotproduct(N, L));
         if (diffTerm > 0)
-            shade += diffTerm;        
+            phong += diffTerm;        
         double specTerm = kSpec * Math.pow(VectorMath.dotproduct(N, H), alpha);
         if (specTerm > 0)
-            shade += specTerm;
+            phong += specTerm;
         
-        return shade;
+        return phong;
     }
     
     private void drawBoundingBox(GL2 gl) {
